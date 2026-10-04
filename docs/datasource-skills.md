@@ -592,6 +592,29 @@ scopes `search:message` and `search:docs:read`, and confirm with
 `/lark/<instance>/docs/<token>`. Server ranking is not BM25 or vector, and
 coverage of older messages is not guaranteed.
 
+## GitHub Gists
+
+The `github-gist` skill (type `github-gist`) searches the authenticated
+account's own gists: code snippets, notes, and design memos. Public and secret
+gists are both included, bounded by the token's scopes. It is separate from the
+`github` skill, which covers Issues and Pull Requests. Tags are `github` and
+`gists`, so authorize with `allowedTags: ["github", "gists"]`.
+
+Indexing is incremental: the first `index()` mirrors the gist list into the
+workspace datasource store, and later runs only fetch changes. Lexical (BM25)
+search runs over that mirror. Semantic search is added on top and embeds
+chunks through the local loopback embedding gateway, so gist content never
+leaves the machine for embeddings. If the gateway is unavailable, indexing
+reports a `semantic-unavailable` warning and lexical search keeps working.
+
+The token comes from, in order, an explicit `token`, the environment variable
+named by `tokenEnv` (default `GITHUB_TOKEN`), then `gh auth token` from the
+GitHub CLI login. The token is not stored. A missing token surfaces as a
+datasource diagnostic rather than a thrown error.
+
+For a live check of the connector, see
+[docs/manual-qa-datasources.md](manual-qa-datasources.md).
+
 ## New datasource checklist
 
 - Implement `DatasourceSkill`.
